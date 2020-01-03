@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:pixiv/screens/home_screen.dart';
+import 'package:pixiv/screens/home/home_screen.dart';
 
 void main() {
   debugPaintSizeEnabled = false;

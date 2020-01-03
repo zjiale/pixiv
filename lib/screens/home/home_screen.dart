@@ -1,7 +1,16 @@
+import 'package:extended_image_library/extended_image_library.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:pixiv/api/CommonServices.dart';
+import 'package:pixiv/common/config.dart';
+import 'package:pixiv/model/illust_rank_model.dart';
+import 'package:pixiv/model/case_model.dart';
+import 'package:pixiv/model/image_list_model.dart';
+import 'package:pixiv/screens/home/home_case.dart';
+import 'package:pixiv/screens/home/home_latest.dart';
 import 'package:pixiv/widgets/list_item.dart';
-import 'package:pixiv/widgets/user_desc.dart';
+import './title_header.dart';
+import './user_desc.dart';
+import './home_rank.dart';
 
 class HomeScreen extends StatefulWidget {
   @override
@@ -10,12 +19,17 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  List _rankList = [];
+  List _case = [];
+  List _latest = [];
   List<String> _tabs = ["插画", "漫画", "小说"];
   List _type = [
     {"icon": Icons.home, "text": "主页"},
     {"icon": Icons.new_releases, "text": "最新"},
     {"icon": Icons.search, "text": "搜索"}
   ];
+
+  Map<String, String> headers = Config.headers;
 
   Widget _buildActions(int index) {
     return Padding(
@@ -69,6 +83,48 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _initRanking();
+    _initCase();
+    _initLatest();
+  }
+
+  void _initRanking() {
+    CommonServices().getRanking((IllustRankModel _bean) {
+      if (_bean.status == "success") {
+        List contents = _bean.response.first.works;
+        contents.removeRange(9, _bean.response.first.works.length);
+        setState(() {
+          _rankList = contents;
+        });
+      }
+    });
+  }
+
+  void _initLatest() {
+    CommonServices().getLatest((ImageModel _bean) {
+      if (_bean.status == "success") {
+        setState(() {
+          _latest = _bean.response;
+        });
+      }
+    });
+  }
+
+  void _initCase() {
+    CommonServices().getCase((CaseModel _bean) {
+      if (_bean.error == false) {
+        List contents = _bean.body;
+        contents.removeRange(8, _bean.body.length);
+        setState(() {
+          _case = contents;
+        });
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
@@ -116,27 +172,25 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SizedBox(height: 20.0),
           Container(
-            height: 200.0,
-            color: Colors.blue,
-            padding: EdgeInsets.only(left: 10.0),
+            height: 260.0,
+            padding: EdgeInsets.symmetric(horizontal: 10.0),
             child: Column(
               children: <Widget>[
-                Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      Container(
-                        child: Row(children: <Widget>[
-                          Icon(FontAwesomeIcons.crown),
-                          Text(
-                            '排行榜',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          )
-                        ]),
-                      )
-                    ])
+                TitleHeader('assets/images/crown.png', '排行榜'),
+                HomeRank(_rankList)
               ],
             ),
-          )
+          ),
+          SizedBox(height: 30.0),
+          Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10.0),
+              child: TitleHeader('assets/images/case.png', '插画特辑')),
+          HomeCase(_case),
+          SizedBox(height: 30.0),
+          Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10.0),
+              child: TitleHeader('assets/images/new.png', '最新作品')),
+          HomeLatest(_latest)
         ]),
       ),
     );
