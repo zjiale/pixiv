@@ -26,12 +26,17 @@ class _TitleHeaderState extends State<TitleHeader> {
                       style: TextStyle(fontWeight: FontWeight.bold))
                 ]),
           ),
-          Container(
-              child: Row(children: <Widget>[
-            Text('查看更多',
-                style: TextStyle(color: Color(0xFF008B8B), fontSize: 12.0)),
-            Icon(Icons.arrow_forward_ios, size: 15.0, color: Colors.blue)
-          ]))
+          GestureDetector(
+            onTap: () {
+              Navigator.of(context).pushNamed('/rankScreen');
+            },
+            child: Container(
+                child: Row(children: <Widget>[
+              Text('查看更多',
+                  style: TextStyle(color: Color(0xFF008B8B), fontSize: 12.0)),
+              Icon(Icons.arrow_forward_ios, size: 15.0, color: Colors.blue)
+            ])),
+          )
         ]);
   }
 }

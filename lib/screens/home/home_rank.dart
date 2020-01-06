@@ -1,5 +1,6 @@
 import 'package:extended_image_library/extended_image_library.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:like_button/like_button.dart';
 import 'package:pixiv/common/config.dart';
 
@@ -16,8 +17,9 @@ class _HomeRankState extends State<HomeRank> {
 
   @override
   Widget build(BuildContext context) {
+    ScreenUtil.instance = ScreenUtil(width: 750, height: 1334)..init(context);
     return Container(
-      height: 230.0,
+      height: ScreenUtil().setHeight(300.0),
       margin: EdgeInsets.only(top: 10.0),
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
@@ -33,9 +35,9 @@ class _HomeRankState extends State<HomeRank> {
                     colorFilter:
                         ColorFilter.mode(Colors.black26, BlendMode.srcOver),
                     image: ExtendedNetworkImageProvider(
-                        widget._rankList[index].work.image_urls.large,
-                        headers: headers,
-                        cache: true)),
+                      widget._rankList[index].work.image_urls.large,
+                      headers: headers,
+                    )),
                 borderRadius: BorderRadius.all(Radius.circular(5.0))),
             child: Stack(
               children: <Widget>[
@@ -90,10 +92,10 @@ class _HomeRankState extends State<HomeRank> {
                                     radius: 10.0,
                                     backgroundImage:
                                         ExtendedNetworkImageProvider(
-                                            widget._rankList[index].work.user
-                                                .profile_image_urls.px_50x50,
-                                            headers: headers,
-                                            cache: true)),
+                                      widget._rankList[index].work.user
+                                          .profile_image_urls.px_50x50,
+                                      headers: headers,
+                                    )),
                                 SizedBox(width: 5.0),
                                 Text(widget._rankList[index].work.user.name,
                                     style: TextStyle(

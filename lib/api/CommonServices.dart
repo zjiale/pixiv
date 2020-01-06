@@ -6,10 +6,17 @@ import 'package:pixiv/model/case_model.dart';
 import 'package:pixiv/model/image_list_model.dart';
 
 class CommonServices {
-  void getRanking(Function callback) async {
-    Dio().get(Api.RANKING, options: _getOptions()).then((response) {
-      callback(IllustRankModel.fromJson(response.data));
-    });
+  // void getRanking(Function callback) async {
+  //   Dio().get(Api.RANKING, options: _getOptions()).then((response) {
+  //     callback(IllustRankModel.fromJson(response.data));
+  //   });
+  // }
+
+  Future<Response> getRanking(String mode, int pageIndex) async {
+    print(pageIndex);
+    return await Dio().get(
+        "${Api.RANKING}&mode=$mode&per_page=20&page=$pageIndex",
+        options: _getOptions());
   }
 
   void getLatest(Function callback) async {

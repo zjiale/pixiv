@@ -1,5 +1,5 @@
-import 'package:extended_image_library/extended_image_library.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pixiv/api/CommonServices.dart';
 import 'package:pixiv/common/config.dart';
 import 'package:pixiv/model/illust_rank_model.dart';
@@ -25,7 +25,6 @@ class _HomeScreenState extends State<HomeScreen> {
   List<String> _tabs = ["插画", "漫画", "小说"];
   List _type = [
     {"icon": Icons.home, "text": "主页"},
-    {"icon": Icons.new_releases, "text": "最新"},
     {"icon": Icons.search, "text": "搜索"}
   ];
 
@@ -38,9 +37,11 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            Icon(_type[index]["icon"], color: Colors.white, size: 25.0),
+            Icon(_type[index]["icon"],
+                color: Colors.white, size: ScreenUtil().setSp(35.0)),
             SizedBox(height: 2.0),
-            Text(_type[index]["text"], style: TextStyle(fontSize: 10.0))
+            Text(_type[index]["text"],
+                style: TextStyle(fontSize: ScreenUtil().setSp(20.0)))
           ]),
     );
   }
@@ -91,13 +92,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _initRanking() {
-    CommonServices().getRanking((IllustRankModel _bean) {
-      if (_bean.status == "success") {
-        List contents = _bean.response.first.works;
-        contents.removeRange(9, _bean.response.first.works.length);
-        setState(() {
-          _rankList = contents;
-        });
+    CommonServices().getRanking('daily', 1).then((res) {
+      if (res.statusCode == 200) {
+        IllustRankModel _bean = IllustRankModel.fromJson(res.data);
+        if (_bean.status == "success") {
+          List contents = _bean.response.first.works;
+          contents.removeRange(9, _bean.response.first.works.length);
+          setState(() {
+            _rankList = contents;
+          });
+        }
       }
     });
   }
@@ -126,6 +130,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ScreenUtil.instance = ScreenUtil(width: 750, height: 1334)..init(context);
+
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(
@@ -172,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SizedBox(height: 20.0),
           Container(
-            height: 260.0,
+            height: ScreenUtil().setHeight(360.0),
             padding: EdgeInsets.symmetric(horizontal: 10.0),
             child: Column(
               children: <Widget>[

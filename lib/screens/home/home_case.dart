@@ -29,7 +29,7 @@ class HomeCase extends StatelessWidget {
                   colorFilter:
                       ColorFilter.mode(Colors.black26, BlendMode.srcOver),
                   image: ExtendedNetworkImageProvider(_case[index].thumbnailUrl,
-                      headers: headers, cache: true))),
+                      headers: headers))),
           child: Padding(
             padding: EdgeInsets.only(left: 5.0, bottom: 10.0),
             child: Align(

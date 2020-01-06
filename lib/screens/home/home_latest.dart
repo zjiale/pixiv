@@ -28,8 +28,7 @@ class HomeLatest extends StatelessWidget {
                     alignment: Alignment.topCenter,
                     image: ExtendedNetworkImageProvider(
                         _latest[index].image_urls.large,
-                        headers: headers,
-                        cache: true))));
+                        headers: headers))));
       },
     );
   }
