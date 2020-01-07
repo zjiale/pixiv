@@ -6,6 +6,11 @@ class RankListRepository extends LoadingMoreBase<Works> {
   int pageindex = 1;
   bool _hasMore = true;
   bool forceRefresh = false;
+
+  final String rankType;
+  final int scrollIndex;
+  RankListRepository(this.rankType, {this.scrollIndex = 1});
+
   @override
   bool get hasMore => _hasMore || forceRefresh;
 
@@ -23,7 +28,8 @@ class RankListRepository extends LoadingMoreBase<Works> {
 
   @override
   Future<bool> loadData([bool isloadMoreAction = false]) async {
-    int pIndex = pageindex;
+    // DateTime now = new DateTime().;
+    int pIndex = this.scrollIndex != 1 ? this.scrollIndex : pageindex;
     var source;
 
     bool isSuccess = false;
@@ -31,7 +37,7 @@ class RankListRepository extends LoadingMoreBase<Works> {
       //to show loading more clearly, in your app,remove this
       await Future.delayed(Duration(milliseconds: 500));
 
-      await CommonServices().getRanking('daily', pIndex).then((res) {
+      await CommonServices().getRanking(this.rankType, pIndex).then((res) {
         if (res.statusCode == 200) {
           IllustRankModel _bean = IllustRankModel.fromJson(res.data);
           if (_bean.status == "success") {
