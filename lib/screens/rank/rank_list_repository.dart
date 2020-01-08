@@ -8,8 +8,9 @@ class RankListRepository extends LoadingMoreBase<Works> {
   bool forceRefresh = false;
 
   final String rankType;
-  final int scrollIndex;
-  RankListRepository(this.rankType, {this.scrollIndex = 1});
+  final List firstData;
+  bool isInit;
+  RankListRepository(this.rankType, this.firstData, this.isInit);
 
   @override
   bool get hasMore => _hasMore || forceRefresh;
@@ -29,7 +30,7 @@ class RankListRepository extends LoadingMoreBase<Works> {
   @override
   Future<bool> loadData([bool isloadMoreAction = false]) async {
     // DateTime now = new DateTime().;
-    int pIndex = this.scrollIndex != 1 ? this.scrollIndex : pageindex;
+    int pIndex = pageindex;
     var source;
 
     bool isSuccess = false;
@@ -37,17 +38,23 @@ class RankListRepository extends LoadingMoreBase<Works> {
       //to show loading more clearly, in your app,remove this
       await Future.delayed(Duration(milliseconds: 500));
 
-      await CommonServices().getRanking(this.rankType, pIndex).then((res) {
-        if (res.statusCode == 200) {
-          IllustRankModel _bean = IllustRankModel.fromJson(res.data);
-          if (_bean.status == "success") {
-            source = _bean.response.first.works;
+      if (!this.isInit) {
+        await CommonServices().getRanking(this.rankType, pIndex).then((res) {
+          if (res.statusCode == 200) {
+            IllustRankModel _bean = IllustRankModel.fromJson(res.data);
+            if (_bean.status == "success") {
+              source = _bean.response.first.works;
+            }
           }
-        }
-      });
+        });
+      } else {
+        this.firstData.removeRange(0, 3);
+        source = this.firstData;
+      }
 
       if (pageindex == 1) {
         this.clear();
+        this.isInit = false;
       }
 
       for (var item in source) {
@@ -56,8 +63,7 @@ class RankListRepository extends LoadingMoreBase<Works> {
 
       _hasMore = source.length != 0;
       pageindex++;
-//      this.clear();
-//      _hasMore=false;
+
       isSuccess = true;
     } catch (exception, stack) {
       isSuccess = false;

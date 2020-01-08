@@ -25,6 +25,7 @@ dependencies:
   cupertino_icons: ^0.1.2
   font_awesome_flutter: ^8.5.0
   dio: 3.0.7
+  flutter_spinkit: 4.1.1+1
   extended_image: 0.6.8
   extended_image_library: 0.1.9
   like_button: 0.1.9
