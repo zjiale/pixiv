@@ -7,10 +7,11 @@ class RankListRepository extends LoadingMoreBase<Works> {
   bool _hasMore = true;
   bool forceRefresh = false;
 
+  final String content;
   final String rankType;
   final List firstData;
   bool isInit;
-  RankListRepository(this.rankType, this.firstData, this.isInit);
+  RankListRepository(this.content, this.rankType, this.firstData, this.isInit);
 
   @override
   bool get hasMore => _hasMore || forceRefresh;
@@ -39,7 +40,9 @@ class RankListRepository extends LoadingMoreBase<Works> {
       await Future.delayed(Duration(milliseconds: 500));
 
       if (!this.isInit) {
-        await CommonServices().getRanking(this.rankType, pIndex).then((res) {
+        await CommonServices()
+            .getRanking(this.content, this.rankType, pIndex)
+            .then((res) {
           if (res.statusCode == 200) {
             IllustRankModel _bean = IllustRankModel.fromJson(res.data);
             if (_bean.status == "success") {

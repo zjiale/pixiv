@@ -12,9 +12,10 @@ class CommonServices {
   //   });
   // }
 
-  Future<Response> getRanking(String mode, int pageIndex) async {
+  Future<Response> getRanking(
+      String content, String mode, int pageIndex) async {
     return await Dio().get(
-        "${Api.RANKING}&mode=$mode&per_page=20&page=$pageIndex",
+        "${Api.RANKING}&content=$content&mode=$mode&per_page=20&page=$pageIndex",
         options: _getOptions());
   }
 

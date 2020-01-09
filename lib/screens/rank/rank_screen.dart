@@ -60,7 +60,7 @@ class _RankScreenState extends State<RankScreen>
             child: TabBarView(
           controller: _rankTabController,
           children: _rankTab.map((e) {
-            return TopImage(e["type"]);
+            return TopImage('all', e["type"]);
           }).toList(),
         ))
       ],

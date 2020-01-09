@@ -92,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _initRanking() {
-    CommonServices().getRanking('daily', 1).then((res) {
+    CommonServices().getRanking('illust', 'daily', 1).then((res) {
       if (res.statusCode == 200) {
         IllustRankModel _bean = IllustRankModel.fromJson(res.data);
         if (_bean.status == "success") {

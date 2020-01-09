@@ -11,8 +11,9 @@ import 'package:pixiv/model/illust_rank_model.dart';
 import 'package:pixiv/screens/rank/rank_list_repository.dart';
 
 class TopImage extends StatefulWidget {
+  final String content;
   final String rankType;
-  TopImage(this.rankType);
+  TopImage(this.content, this.rankType);
 
   @override
   _TopImageState createState() => _TopImageState();
@@ -30,11 +31,11 @@ class _TopImageState extends State<TopImage> {
   }
 
   void _getImageList() {
-    CommonServices().getRanking(widget.rankType, 1).then((res) {
+    CommonServices().getRanking(widget.content, widget.rankType, 1).then((res) {
       if (res.statusCode == 200) {
         IllustRankModel _bean = IllustRankModel.fromJson(res.data);
         if (_bean.status == "success") {
-          rankListRepository = new RankListRepository(
+          rankListRepository = new RankListRepository(widget.content,
               widget.rankType, _bean.response.first.works, true);
           setState(() {
             _source = _bean.response.first.works;
