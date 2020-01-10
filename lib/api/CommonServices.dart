@@ -6,12 +6,6 @@ import 'package:pixiv/model/case_model.dart';
 import 'package:pixiv/model/image_list_model.dart';
 
 class CommonServices {
-  // void getRanking(Function callback) async {
-  //   Dio().get(Api.RANKING, options: _getOptions()).then((response) {
-  //     callback(IllustRankModel.fromJson(response.data));
-  //   });
-  // }
-
   Future<Response> getRanking(
       String content, String mode, int pageIndex) async {
     return await Dio().get(
@@ -29,6 +23,11 @@ class CommonServices {
     Dio().get(Api.SHOWCASE, options: _getOptions()).then((response) {
       callback(CaseModel.fromJson(response.data));
     });
+  }
+
+  Future<Response> getDetailInfo(String type, int id) async {
+    return await Dio()
+        .get("${Api.BASE_URL}?type=$type&id=$id", options: _getOptions());
   }
 
   Options _getOptions() {

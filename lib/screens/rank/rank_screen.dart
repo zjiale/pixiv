@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:loading_more_list/loading_more_list.dart';
+import 'package:pixiv/common/config.dart';
 import 'package:pixiv/screens/rank/top_image.dart';
 // import 'package:pixiv/screens/rank/image_list.dart';
 
@@ -10,15 +11,12 @@ class RankScreen extends StatefulWidget {
 
 class _RankScreenState extends State<RankScreen>
     with SingleTickerProviderStateMixin {
-  List _rankTab = [
-    {"text": "日榜", "type": "daily"},
-    {"text": "新人", "type": "rookie"},
-    {"text": "周榜", "type": "weekly"},
-    {"text": "月榜", "type": "monthly"},
-    {"text": "过去排行榜", "type": "other"},
-  ];
-
   TabController _rankTabController;
+  List _rankTab = Config.rankTab;
+
+  // 标题，属性相关
+  final String _title = "排行榜";
+  final String _type = "all";
 
   @override
   void initState() {
@@ -40,7 +38,7 @@ class _RankScreenState extends State<RankScreen>
         SliverAppBar(
           // 是否附着在头部
           pinned: true,
-          title: Text('排行榜'),
+          title: Text(_title),
           bottom: PreferredSize(
               preferredSize: Size.fromHeight(48.0),
               child: Material(
@@ -60,7 +58,7 @@ class _RankScreenState extends State<RankScreen>
             child: TabBarView(
           controller: _rankTabController,
           children: _rankTab.map((e) {
-            return TopImage('all', e["type"]);
+            return TopImage(_type, e["type"]);
           }).toList(),
         ))
       ],

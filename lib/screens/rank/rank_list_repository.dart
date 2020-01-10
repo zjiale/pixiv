@@ -1,3 +1,5 @@
+import 'dart:convert' as convert;
+
 import 'package:loading_more_list/loading_more_list.dart';
 import 'package:pixiv/api/CommonServices.dart';
 import 'package:pixiv/model/illust_rank_model.dart';
@@ -30,7 +32,6 @@ class RankListRepository extends LoadingMoreBase<Works> {
 
   @override
   Future<bool> loadData([bool isloadMoreAction = false]) async {
-    // DateTime now = new DateTime().;
     int pIndex = pageindex;
     var source;
 
@@ -51,8 +52,10 @@ class RankListRepository extends LoadingMoreBase<Works> {
           }
         });
       } else {
-        this.firstData.removeRange(0, 3);
-        source = this.firstData;
+        // 浅拷贝会影响前面的数据所以需要深拷贝
+        List _firstData = List<Works>.from(this.firstData);
+        _firstData.removeRange(0, 3);
+        source = _firstData;
       }
 
       if (pageindex == 1) {

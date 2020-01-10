@@ -2,9 +2,15 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:pixiv/api/CommonServices.dart';
+import 'package:pixiv/model/detail_model.dart';
 
 class DetailScreen extends StatefulWidget {
+  final String type;
+  final int id;
+  DetailScreen(this.type, this.id);
+
   @override
   _DetailScreenState createState() => _DetailScreenState();
 }
@@ -23,11 +29,13 @@ class _DetailScreenState extends State<DetailScreen>
   final Duration duration = const Duration(milliseconds: 300);
 
   // 图片简介相关属性
+  List _detail;
   int _maxLine = 2;
 
   @override
   void initState() {
     super.initState();
+    _initDetailInfo();
     _controller = AnimationController(vsync: this, duration: duration);
     _slideAnimation =
         Tween<Offset>(begin: Offset(0.0, 0.0), end: Offset(-1.0, 0.0))
@@ -79,69 +87,149 @@ class _DetailScreenState extends State<DetailScreen>
     }
   }
 
-  Widget _imageList() {
-    return Column(key: _imageGlobalKey, children: <Widget>[
-      Container(
+  Future _initDetailInfo() {
+    CommonServices().getDetailInfo(widget.type, widget.id).then((res) {
+      if (res.statusCode == 200) {
+        DetailModel _bean = DetailModel.fromJson(res.data);
+        if (_bean.status == "success") {
+          setState(() {
+            _detail = _bean.response;
+          });
+        }
+      }
+    });
+  }
+
+  Widget _imageList(BuildContext context) {
+    double deviceWidth = window.physicalSize.height / window.devicePixelRatio;
+    List<Widget> list = [];
+    Widget content;
+
+    for (var imgs in this._detail.first.metadata.pages) {
+      list.add(Container(
           width: double.infinity,
-          height: ScreenUtil().setHeight(750.0),
+          height: this._detail.first.height *
+              deviceWidth /
+              this._detail.first.width,
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(30.0),
               image: DecorationImage(
-                  image: NetworkImage(
-                      'https://cdn.dribbble.com/users/383120/screenshots/9355233/media/c91de53e75aabb60a8f2b7b1aebada5e.png'),
+                  image: NetworkImage(imgs.image_urls.medium),
                   fit: BoxFit.cover),
               boxShadow: [
                 BoxShadow(
                     color: Colors.black26,
                     offset: Offset(0.0, 2.0),
                     blurRadius: 6.0)
-              ])),
-      Container(
-          width: double.infinity,
-          height: ScreenUtil().setHeight(750.0),
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(30.0),
-              image: DecorationImage(
-                  image: NetworkImage(
-                      'https://cdn.dribbble.com/users/383120/screenshots/9355233/media/c91de53e75aabb60a8f2b7b1aebada5e.png'),
-                  fit: BoxFit.cover),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black26,
-                    offset: Offset(0.0, 2.0),
-                    blurRadius: 6.0)
-              ])),
-      Container(
-          width: double.infinity,
-          height: ScreenUtil().setHeight(750.0),
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(30.0),
-              image: DecorationImage(
-                  image: NetworkImage(
-                      'https://cdn.dribbble.com/users/383120/screenshots/9355233/media/c91de53e75aabb60a8f2b7b1aebada5e.png'),
-                  fit: BoxFit.cover),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black26,
-                    offset: Offset(0.0, 2.0),
-                    blurRadius: 6.0)
-              ])),
-      Container(
-          width: double.infinity,
-          height: ScreenUtil().setHeight(750.0),
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(30.0),
-              image: DecorationImage(
-                  image: NetworkImage(
-                      'https://cdn.dribbble.com/users/383120/screenshots/9355233/media/c91de53e75aabb60a8f2b7b1aebada5e.png'),
-                  fit: BoxFit.cover),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black26,
-                    offset: Offset(0.0, 2.0),
-                    blurRadius: 6.0)
-              ]))
-    ]);
+              ])));
+    }
+
+    content = Column(key: _imageGlobalKey, children: list);
+    return content;
+  }
+
+  Widget _imageInfo() {
+    return Stack(
+      children: <Widget>[
+        Container(
+          child: ListView(
+            controller: _scrollController,
+            children: <Widget>[
+              _imageList(context),
+              Container(
+                height: 80.0,
+                padding: EdgeInsets.symmetric(horizontal: 10.0),
+                color: Colors.yellow,
+                child: Row(children: <Widget>[
+                  CircleAvatar(
+                      radius: 20.0,
+                      backgroundImage: NetworkImage(
+                          'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1600553076,1284989575&fm=26&gp=0.jpg')),
+                  SizedBox(width: 10.0),
+                  Container(
+                    width: ScreenUtil().setWidth(550.0),
+                    child: Text(
+                      '啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊刷煞阿萨大大实打实的',
+                      maxLines: _maxLine,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  )
+                ]),
+              ),
+              Container(height: 300.0, color: Colors.blue)
+            ],
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 40.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              IconButton(
+                icon: Icon(Icons.arrow_back),
+                iconSize: 30.0,
+                color: Colors.black,
+                onPressed: () => Navigator.pop(context),
+              )
+            ],
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          child: GestureDetector(
+            onTap: () {
+              showModalBottomSheet(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return Container(
+                      color: Colors.greenAccent,
+                    );
+                  });
+            },
+            child: Opacity(
+              // duration: Duration(milliseconds: 300),
+              opacity: _showBottom ? 1.0 : 0.0,
+              child: Container(
+                height: 80.0,
+                width: ScreenUtil().setWidth(750.0),
+                padding: EdgeInsets.symmetric(horizontal: 10.0),
+                color: Colors.yellow,
+                child: Row(children: <Widget>[
+                  SlideTransition(
+                    position: _slideAnimation,
+                    child: Icon(
+                      Icons.arrow_drop_up,
+                      size: 25.0,
+                    ),
+                  ),
+                  SlideTransition(
+                    position: _slideAnimation1,
+                    child: Row(
+                      children: <Widget>[
+                        CircleAvatar(
+                            radius: 20.0,
+                            backgroundImage: NetworkImage(
+                                'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1600553076,1284989575&fm=26&gp=0.jpg')),
+                        SizedBox(width: 10.0),
+                        Container(
+                          width: ScreenUtil().setWidth(550.0),
+                          child: Text(
+                            '啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊刷煞阿萨大大实打实的',
+                            maxLines: _maxLine,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )
+                      ],
+                    ),
+                  )
+                ]),
+              ),
+            ),
+          ),
+        )
+      ],
+    );
   }
 
   @override
@@ -150,107 +238,10 @@ class _DetailScreenState extends State<DetailScreen>
 
     return SafeArea(
         child: Scaffold(
-      body: Stack(
-        children: <Widget>[
-          Container(
-            child: ListView(
-              controller: _scrollController,
-              children: <Widget>[
-                _imageList(),
-                Container(
-                  height: 80.0,
-                  padding: EdgeInsets.symmetric(horizontal: 10.0),
-                  color: Colors.yellow,
-                  child: Row(children: <Widget>[
-                    CircleAvatar(
-                        radius: 20.0,
-                        backgroundImage: NetworkImage(
-                            'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1600553076,1284989575&fm=26&gp=0.jpg')),
-                    SizedBox(width: 10.0),
-                    Container(
-                      width: ScreenUtil().setWidth(550.0),
-                      child: Text(
-                        '啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊刷煞阿萨大大实打实的',
-                        maxLines: _maxLine,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    )
-                  ]),
-                ),
-                Container(height: 300.0, color: Colors.blue)
-              ],
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 40.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                IconButton(
-                  icon: Icon(Icons.arrow_back),
-                  iconSize: 30.0,
-                  color: Colors.black,
-                  onPressed: () => Navigator.pop(context),
-                )
-              ],
-            ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            child: GestureDetector(
-              onTap: () {
-                showModalBottomSheet(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return Container(
-                        color: Colors.greenAccent,
-                      );
-                    });
-              },
-              child: Opacity(
-                // duration: Duration(milliseconds: 300),
-                opacity: _showBottom ? 1.0 : 0.0,
-                child: Container(
-                  height: 80.0,
-                  width: ScreenUtil().setWidth(750.0),
-                  padding: EdgeInsets.symmetric(horizontal: 10.0),
-                  color: Colors.yellow,
-                  child: Row(children: <Widget>[
-                    SlideTransition(
-                      position: _slideAnimation,
-                      child: Icon(
-                        Icons.arrow_drop_up,
-                        size: 25.0,
-                      ),
-                    ),
-                    SlideTransition(
-                      position: _slideAnimation1,
-                      child: Row(
-                        children: <Widget>[
-                          CircleAvatar(
-                              radius: 20.0,
-                              backgroundImage: NetworkImage(
-                                  'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1600553076,1284989575&fm=26&gp=0.jpg')),
-                          SizedBox(width: 10.0),
-                          Container(
-                            width: ScreenUtil().setWidth(550.0),
-                            child: Text(
-                              '啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊刷煞阿萨大大实打实的',
-                              maxLines: _maxLine,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          )
-                        ],
-                      ),
-                    )
-                  ]),
-                ),
-              ),
-            ),
-          )
-        ],
-      ),
-    ));
+            body: _detail != null
+                ? _imageInfo()
+                : Center(
+                    child:
+                        SpinKitChasingDots(color: Colors.orange, size: 50.0))));
   }
 }
