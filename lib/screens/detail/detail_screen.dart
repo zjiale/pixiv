@@ -1,9 +1,12 @@
 import 'dart:ui';
 
+import 'package:async/async.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:pixiv/api/CommonServices.dart';
+import 'package:pixiv/common/config.dart';
 import 'package:pixiv/model/detail_model.dart';
 
 class DetailScreen extends StatefulWidget {
@@ -19,8 +22,12 @@ class _DetailScreenState extends State<DetailScreen>
     with SingleTickerProviderStateMixin {
   // 滚动监听相关属性
   final GlobalKey _imageGlobalKey = GlobalKey();
+  AsyncMemoizer _memoizer = AsyncMemoizer();
   ScrollController _scrollController = new ScrollController();
-  bool _showBottom = true;
+  bool _showBottom;
+  // window对象中视窗单位为px，所以这里需要除以像素数得到dp
+  double viewport = window.physicalSize.height / window.devicePixelRatio;
+  double padding = window.padding.top / window.devicePixelRatio;
 
   // 动画相关属性
   AnimationController _controller;
@@ -29,8 +36,8 @@ class _DetailScreenState extends State<DetailScreen>
   final Duration duration = const Duration(milliseconds: 300);
 
   // 图片简介相关属性
-  List _detail;
   int _maxLine = 2;
+  Map<String, String> headers = Config.headers;
 
   @override
   void initState() {
@@ -57,104 +64,164 @@ class _DetailScreenState extends State<DetailScreen>
 
   // 监听图片是否超过视窗
   void _slideListener() {
-    // window对象中视窗单位为px，所以这里需要除以像素数得到dp
-    double viewport = window.physicalSize.height / window.devicePixelRatio;
-    double padding = window.padding.top / window.devicePixelRatio;
-    double _scrollNum =
-        _imageGlobalKey.currentContext.size.height - viewport + padding + 80.0;
-
-    if (_imageGlobalKey.currentContext.size.height < viewport) {
-      setState(() {
-        _showBottom = false;
-      });
-    } else {
-      //监听滚动事件，打印滚动位置
-      _scrollController.addListener(() {
-        if (_scrollController.offset >= _scrollNum) {
-          setState(() {
-            _controller.forward();
-            _showBottom = false;
-            _maxLine = 1;
-          });
-        } else {
-          setState(() {
-            _controller.reverse();
-            _showBottom = true;
-            _maxLine = 2;
-          });
-        }
-      });
-    }
-  }
-
-  Future _initDetailInfo() {
-    CommonServices().getDetailInfo(widget.type, widget.id).then((res) {
-      if (res.statusCode == 200) {
-        DetailModel _bean = DetailModel.fromJson(res.data);
-        if (_bean.status == "success") {
-          setState(() {
-            _detail = _bean.response;
-          });
-        }
+    //监听滚动事件，打印滚动位置
+    _scrollController.addListener(() {
+      double _scrollNum = _imageGlobalKey.currentContext.size.height -
+          viewport +
+          padding +
+          60.0;
+      if (_scrollController.offset >= _scrollNum) {
+        setState(() {
+          _controller.forward();
+          _showBottom = false;
+          _maxLine = 1;
+        });
+      } else {
+        setState(() {
+          _controller.reverse();
+          _showBottom = true;
+          _maxLine = 2;
+        });
       }
     });
   }
 
-  Widget _imageList(BuildContext context) {
-    double deviceWidth = window.physicalSize.height / window.devicePixelRatio;
-    List<Widget> list = [];
-    Widget content;
-
-    for (var imgs in this._detail.first.metadata.pages) {
-      list.add(Container(
-          width: double.infinity,
-          height: this._detail.first.height *
-              deviceWidth /
-              this._detail.first.width,
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(30.0),
-              image: DecorationImage(
-                  image: NetworkImage(imgs.image_urls.medium),
-                  fit: BoxFit.cover),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black26,
-                    offset: Offset(0.0, 2.0),
-                    blurRadius: 6.0)
-              ])));
-    }
-
-    content = Column(key: _imageGlobalKey, children: list);
-    return content;
+  Future _initDetailInfo() {
+    return _memoizer.runOnce(() async {
+      return CommonServices().getDetailInfo(widget.type, widget.id).then((res) {
+        if (res.statusCode == 200) {
+          DetailModel _bean = DetailModel.fromJson(res.data);
+          if (_bean.status == "success") {
+            return _bean.response;
+          }
+        }
+      });
+    });
   }
 
-  Widget _imageInfo() {
+  Widget _imageList(BuildContext context, AsyncSnapshot snapshot) {
+    double deviceWidth = MediaQuery.of(context).size.width;
+    List<Widget> list = [];
+
+    if (snapshot.data.first.metadata == null) {
+      list.add(Container(
+          width: double.infinity,
+          height: snapshot.data.first.height *
+              deviceWidth /
+              snapshot.data.first.width,
+          child: ExtendedImage.network(snapshot.data.first.image_urls.medium,
+              headers: headers,
+              fit: BoxFit.contain,
+              alignment: Alignment.topCenter)));
+    } else {
+      for (var imgs in snapshot.data.first.metadata.pages) {
+        list.add(Container(
+            width: double.infinity,
+            height: snapshot.data.first.height *
+                deviceWidth /
+                snapshot.data.first.width,
+            child: ExtendedImage.network(imgs.image_urls.medium,
+                headers: headers,
+                fit: BoxFit.contain,
+                alignment: Alignment.topCenter)));
+      }
+    }
+
+    return Column(key: _imageGlobalKey, children: list);
+  }
+
+  Widget _imageInfo(AsyncSnapshot snapshot) {
+    Size _deviceSize = MediaQuery.of(context).size;
+    var _query = snapshot.data.first;
+    double _limitHeight = _query.height * _deviceSize.width / _query.width;
+    int num = _query.metadata != null ? _query.metadata.pages.length : 1;
+    // 图片的总共长度
+    double _totalHeight = _limitHeight * num;
+
     return Stack(
       children: <Widget>[
         Container(
           child: ListView(
             controller: _scrollController,
             children: <Widget>[
-              _imageList(context),
+              _imageList(context, snapshot),
               Container(
-                height: 80.0,
-                padding: EdgeInsets.symmetric(horizontal: 10.0),
-                color: Colors.yellow,
-                child: Row(children: <Widget>[
-                  CircleAvatar(
-                      radius: 20.0,
-                      backgroundImage: NetworkImage(
-                          'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1600553076,1284989575&fm=26&gp=0.jpg')),
-                  SizedBox(width: 10.0),
-                  Container(
-                    width: ScreenUtil().setWidth(550.0),
-                    child: Text(
-                      '啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊刷煞阿萨大大实打实的',
-                      maxLines: _maxLine,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  )
-                ]),
+                height: ScreenUtil().setHeight(550.0),
+                padding: EdgeInsets.only(left: 20.0, top: 5.0),
+                child: Column(
+                  children: <Widget>[
+                    Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          CircleAvatar(
+                              radius: 16.0,
+                              backgroundImage: NetworkImage(
+                                  _query.user.profile_image_urls.px_50x50,
+                                  headers: headers)),
+                          SizedBox(width: 10.0),
+                          Container(
+                              width: ScreenUtil().setWidth(550.0),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: <Widget>[
+                                    Text(_query.title,
+                                        maxLines: _maxLine,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black54)),
+                                    SizedBox(
+                                        height: ScreenUtil().setHeight(8.0)),
+                                    Text(_query.user.name,
+                                        style: TextStyle(
+                                            fontSize: ScreenUtil().setSp(20.0),
+                                            color: Colors.black45))
+                                  ]))
+                        ]),
+                    SizedBox(height: 18.0),
+                    Row(children: <Widget>[
+                      Text('${_query.created_time}',
+                          style: TextStyle(
+                              color: Color(0xFF5F9EA0),
+                              fontSize: ScreenUtil().setSp(24.0))),
+                      SizedBox(width: 10.0),
+                      RichText(
+                        text: TextSpan(
+                            style: TextStyle(
+                                color: Color(0xFF5F9EA0),
+                                fontSize: ScreenUtil().setSp(24.0)),
+                            children: [
+                              TextSpan(
+                                  text: "${_query.stats.views_count}",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              TextSpan(text: " 阅读"),
+                            ]),
+                        textDirection: TextDirection.ltr,
+                      ),
+                      SizedBox(width: 10.0),
+                      RichText(
+                        text: TextSpan(
+                            style: TextStyle(
+                                color: Color(0xFF5F9EA0),
+                                fontSize: ScreenUtil().setSp(24.0)),
+                            children: [
+                              TextSpan(
+                                  text:
+                                      "${_query.stats.favorited_count.public + _query.stats.favorited_count.private}",
+                                  style:
+                                      TextStyle(fontWeight: FontWeight.bold)),
+                              TextSpan(text: " 喜欢"),
+                            ]),
+                        textDirection: TextDirection.ltr,
+                      )
+                    ]),
+                    SizedBox(height: 18.0),
+                    Wrap(spacing: 10.0, runSpacing: 10.0, children: <Widget>[
+                      Container(height: 50.0, width: 100.0, color: Colors.blue)
+                    ]),
+                  ],
+                ),
               ),
               Container(height: 300.0, color: Colors.blue)
             ],
@@ -188,10 +255,13 @@ class _DetailScreenState extends State<DetailScreen>
                   });
             },
             child: Opacity(
-              // duration: Duration(milliseconds: 300),
-              opacity: _showBottom ? 1.0 : 0.0,
+              opacity: (_showBottom != null
+                      ? _showBottom
+                      : (_totalHeight > _deviceSize.height))
+                  ? 1.0
+                  : 0.0,
               child: Container(
-                height: 80.0,
+                height: 60.0,
                 width: ScreenUtil().setWidth(750.0),
                 padding: EdgeInsets.symmetric(horizontal: 10.0),
                 color: Colors.yellow,
@@ -238,10 +308,19 @@ class _DetailScreenState extends State<DetailScreen>
 
     return SafeArea(
         child: Scaffold(
-            body: _detail != null
-                ? _imageInfo()
-                : Center(
-                    child:
-                        SpinKitChasingDots(color: Colors.orange, size: 50.0))));
+            body: FutureBuilder(
+                future: _initDetailInfo(),
+                builder: (BuildContext context, AsyncSnapshot snapshot) {
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                      return Center(
+                          child: SpinKitChasingDots(
+                              color: Colors.orange, size: 30.0));
+                    case ConnectionState.done:
+                      return _imageInfo(snapshot);
+                    default:
+                      return null;
+                  }
+                })));
   }
 }
