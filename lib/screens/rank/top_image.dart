@@ -55,11 +55,11 @@ class _TopImageState extends State<TopImage> {
     });
   }
 
-  void _toDetail(int id) {
+  void _toDetail(int id, int userId) {
     Navigator.push(
         context,
         MaterialPageRoute(
-            builder: (context) => DetailScreen(widget.content, id)));
+            builder: (context) => DetailScreen(widget.content, id, userId)));
   }
 
   // 前三名图片
@@ -67,7 +67,8 @@ class _TopImageState extends State<TopImage> {
     double deviceWidth = MediaQuery.of(context).size.width;
 
     return GestureDetector(
-      onTap: () => _toDetail(_source[index].work.id),
+      onTap: () =>
+          _toDetail(_source[index].work.id, _source[index].work.user.id),
       child: Container(
           margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
           decoration: BoxDecoration(boxShadow: [

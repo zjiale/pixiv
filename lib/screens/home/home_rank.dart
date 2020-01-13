@@ -1,3 +1,4 @@
+import 'package:extended_image/extended_image.dart';
 import 'package:extended_image_library/extended_image_library.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -28,19 +29,20 @@ class _HomeRankState extends State<HomeRank> {
           return Container(
             width: 225.0,
             margin: EdgeInsets.only(right: 10.0),
-            decoration: BoxDecoration(
-                image: DecorationImage(
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                    colorFilter:
-                        ColorFilter.mode(Colors.black26, BlendMode.srcOver),
-                    image: ExtendedNetworkImageProvider(
-                      widget._rankList[index].work.image_urls.large,
-                      headers: headers,
-                    )),
-                borderRadius: BorderRadius.all(Radius.circular(5.0))),
             child: Stack(
               children: <Widget>[
+                ClipRRect(
+                  borderRadius: BorderRadius.all(Radius.circular(5.0)),
+                  child: ExtendedImage.network(
+                      widget._rankList[index].work.image_urls.large,
+                      headers: headers,
+                      width: double.infinity,
+                      height: double.infinity,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.topCenter,
+                      colorBlendMode: BlendMode.srcOver,
+                      color: Colors.black26),
+                ),
                 widget._rankList[index].work.page_count > 1
                     ? Align(
                         alignment: Alignment.topRight,

@@ -9,7 +9,7 @@ class CommonServices {
   Future<Response> getRanking(
       String content, String mode, int pageIndex) async {
     return await Dio().get(
-        "${Api.RANKING}&content=$content&mode=$mode&per_page=20&page=$pageIndex",
+        "${Api.RANKING}&content=$content&mode=$mode&per_page=20&page=$pageIndex&date=2020-01-10",
         options: _getOptions());
   }
 
@@ -26,6 +26,7 @@ class CommonServices {
   }
 
   Future<Response> getDetailInfo(String type, int id) async {
+    print(type + '$id');
     return await Dio()
         .get("${Api.BASE_URL}?type=$type&id=$id", options: _getOptions());
   }

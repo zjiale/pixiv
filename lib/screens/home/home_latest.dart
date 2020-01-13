@@ -1,4 +1,4 @@
-import 'package:extended_image_library/extended_image_library.dart';
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/material.dart';
 import 'package:pixiv/common/config.dart';
 
@@ -22,13 +22,10 @@ class HomeLatest extends StatelessWidget {
       ),
       itemBuilder: (context, index) {
         return Container(
-            decoration: BoxDecoration(
-                image: DecorationImage(
-                    fit: BoxFit.cover,
-                    alignment: Alignment.topCenter,
-                    image: ExtendedNetworkImageProvider(
-                        _latest[index].image_urls.large,
-                        headers: headers))));
+            child: ExtendedImage.network(_latest[index].image_urls.large,
+                headers: headers,
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter));
       },
     );
   }

@@ -8,11 +8,15 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:pixiv/api/CommonServices.dart';
 import 'package:pixiv/common/config.dart';
 import 'package:pixiv/model/detail_model.dart';
+import 'package:pixiv/model/member_illust_model.dart';
+import 'package:pixiv/screens/detail/illuser_desc.dart';
+import 'package:pixiv/widgets/follow_btn.dart';
 
 class DetailScreen extends StatefulWidget {
   final String type;
   final int id;
-  DetailScreen(this.type, this.id);
+  final int userId;
+  DetailScreen(this.type, this.id, this.userId);
 
   @override
   _DetailScreenState createState() => _DetailScreenState();
@@ -20,6 +24,8 @@ class DetailScreen extends StatefulWidget {
 
 class _DetailScreenState extends State<DetailScreen>
     with SingleTickerProviderStateMixin {
+  final String _type = 'member_illust';
+
   // 滚动监听相关属性
   final GlobalKey _imageGlobalKey = GlobalKey();
   AsyncMemoizer _memoizer = AsyncMemoizer();
@@ -42,7 +48,6 @@ class _DetailScreenState extends State<DetailScreen>
   @override
   void initState() {
     super.initState();
-    _initDetailInfo();
     _controller = AnimationController(vsync: this, duration: duration);
     _slideAnimation =
         Tween<Offset>(begin: Offset(0.0, 0.0), end: Offset(-1.0, 0.0))
@@ -86,40 +91,52 @@ class _DetailScreenState extends State<DetailScreen>
     });
   }
 
-  Future _initDetailInfo() {
+  _load() {
     return _memoizer.runOnce(() async {
-      return CommonServices().getDetailInfo(widget.type, widget.id).then((res) {
-        if (res.statusCode == 200) {
-          DetailModel _bean = DetailModel.fromJson(res.data);
-          if (_bean.status == "success") {
-            return _bean.response;
-          }
-        }
-      });
+      return Future.wait([_initDetailInfo(), _initUserInfo()]);
     });
   }
 
-  Widget _imageList(BuildContext context, AsyncSnapshot snapshot) {
+  Future _initDetailInfo() {
+    return CommonServices().getDetailInfo(widget.type, widget.id).then((res) {
+      if (res.statusCode == 200) {
+        DetailModel _bean = DetailModel.fromJson(res.data);
+        if (_bean.status == "success") {
+          return _bean.response;
+        }
+      }
+    });
+  }
+
+  Future _initUserInfo() {
+    return CommonServices().getDetailInfo(_type, widget.userId).then((res) {
+      if (res.statusCode == 200) {
+        MemberIllustModel _bean = MemberIllustModel.fromJson(res.data);
+        if (_bean.status == "success") {
+          _bean.response.removeRange(3, _bean.response.length);
+          return _bean.response;
+        }
+      }
+    });
+  }
+
+  Widget _imageList(BuildContext context, List snapshot) {
     double deviceWidth = MediaQuery.of(context).size.width;
     List<Widget> list = [];
 
-    if (snapshot.data.first.metadata == null) {
+    if (snapshot.first.metadata == null) {
       list.add(Container(
           width: double.infinity,
-          height: snapshot.data.first.height *
-              deviceWidth /
-              snapshot.data.first.width,
-          child: ExtendedImage.network(snapshot.data.first.image_urls.medium,
+          height: snapshot.first.height * deviceWidth / snapshot.first.width,
+          child: ExtendedImage.network(snapshot.first.image_urls.medium,
               headers: headers,
               fit: BoxFit.contain,
               alignment: Alignment.topCenter)));
     } else {
-      for (var imgs in snapshot.data.first.metadata.pages) {
+      for (var imgs in snapshot.first.metadata.pages) {
         list.add(Container(
             width: double.infinity,
-            height: snapshot.data.first.height *
-                deviceWidth /
-                snapshot.data.first.width,
+            height: snapshot.first.height * deviceWidth / snapshot.first.width,
             child: ExtendedImage.network(imgs.image_urls.medium,
                 headers: headers,
                 fit: BoxFit.contain,
@@ -130,13 +147,33 @@ class _DetailScreenState extends State<DetailScreen>
     return Column(key: _imageGlobalKey, children: list);
   }
 
-  Widget _imageInfo(AsyncSnapshot snapshot) {
+  Widget _userImageList(List imgList) {
+    List<Widget> list = [];
+
+    for (var imgs in imgList) {
+      list.add(Container(
+          child: ExtendedImage.network(imgs.image_urls.px_480mw,
+              headers: headers,
+              fit: BoxFit.contain,
+              alignment: Alignment.topCenter)));
+    }
+
+    return Expanded(
+      child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween, children: list),
+    );
+  }
+
+  Widget _imageInfo(List snapshot, List snapshot1) {
+    var _query = snapshot.first;
+
+    // 图片显示以及底部导航栏的显示
     Size _deviceSize = MediaQuery.of(context).size;
-    var _query = snapshot.data.first;
     double _limitHeight = _query.height * _deviceSize.width / _query.width;
     int num = _query.metadata != null ? _query.metadata.pages.length : 1;
     // 图片的总共长度
     double _totalHeight = _limitHeight * num;
+    double _difference = _totalHeight - _deviceSize.height;
 
     return Stack(
       children: <Widget>[
@@ -145,90 +182,45 @@ class _DetailScreenState extends State<DetailScreen>
             controller: _scrollController,
             children: <Widget>[
               _imageList(context, snapshot),
+              IlluserDesc(_query),
+              Divider(height: 1.0, color: Colors.grey),
+              SizedBox(height: 18.0),
               Container(
-                height: ScreenUtil().setHeight(550.0),
-                padding: EdgeInsets.only(left: 20.0, top: 5.0),
-                child: Column(
-                  children: <Widget>[
-                    Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          CircleAvatar(
-                              radius: 16.0,
-                              backgroundImage: NetworkImage(
-                                  _query.user.profile_image_urls.px_50x50,
-                                  headers: headers)),
-                          SizedBox(width: 10.0),
-                          Container(
-                              width: ScreenUtil().setWidth(550.0),
-                              child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: <Widget>[
-                                    Text(_query.title,
-                                        maxLines: _maxLine,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.black54)),
-                                    SizedBox(
-                                        height: ScreenUtil().setHeight(8.0)),
-                                    Text(_query.user.name,
-                                        style: TextStyle(
-                                            fontSize: ScreenUtil().setSp(20.0),
-                                            color: Colors.black45))
-                                  ]))
-                        ]),
-                    SizedBox(height: 18.0),
-                    Row(children: <Widget>[
-                      Text('${_query.created_time}',
-                          style: TextStyle(
-                              color: Color(0xFF5F9EA0),
-                              fontSize: ScreenUtil().setSp(24.0))),
-                      SizedBox(width: 10.0),
-                      RichText(
-                        text: TextSpan(
-                            style: TextStyle(
-                                color: Color(0xFF5F9EA0),
-                                fontSize: ScreenUtil().setSp(24.0)),
-                            children: [
-                              TextSpan(
-                                  text: "${_query.stats.views_count}",
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                              TextSpan(text: " 阅读"),
+                  height: 300.0,
+                  padding: EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Row(children: <Widget>[
+                                CircleAvatar(
+                                    radius: 16.0,
+                                    backgroundImage: NetworkImage(
+                                        _query.user.profile_image_urls.px_50x50,
+                                        headers: headers)),
+                                SizedBox(width: 10.0),
+                                Container(
+                                    child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                      Text(_query.user.name,
+                                          style: TextStyle(
+                                              color: Colors.black54,
+                                              fontWeight: FontWeight.bold))
+                                    ]))
+                              ]),
+                              FollowButton()
                             ]),
-                        textDirection: TextDirection.ltr,
-                      ),
-                      SizedBox(width: 10.0),
-                      RichText(
-                        text: TextSpan(
-                            style: TextStyle(
-                                color: Color(0xFF5F9EA0),
-                                fontSize: ScreenUtil().setSp(24.0)),
-                            children: [
-                              TextSpan(
-                                  text:
-                                      "${_query.stats.favorited_count.public + _query.stats.favorited_count.private}",
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold)),
-                              TextSpan(text: " 喜欢"),
-                            ]),
-                        textDirection: TextDirection.ltr,
-                      )
-                    ]),
-                    SizedBox(height: 18.0),
-                    Wrap(spacing: 10.0, runSpacing: 10.0, children: <Widget>[
-                      Container(height: 50.0, width: 100.0, color: Colors.blue)
-                    ]),
-                  ],
-                ),
-              ),
-              Container(height: 300.0, color: Colors.blue)
+                        _userImageList(snapshot1)
+                      ]))
             ],
           ),
         ),
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 40.0),
+          padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
@@ -255,9 +247,7 @@ class _DetailScreenState extends State<DetailScreen>
                   });
             },
             child: Opacity(
-              opacity: (_showBottom != null
-                      ? _showBottom
-                      : (_totalHeight > _deviceSize.height))
+              opacity: (_showBottom != null ? _showBottom : (_difference <= 20))
                   ? 1.0
                   : 0.0,
               child: Container(
@@ -308,8 +298,9 @@ class _DetailScreenState extends State<DetailScreen>
 
     return SafeArea(
         child: Scaffold(
+            backgroundColor: Colors.white,
             body: FutureBuilder(
-                future: _initDetailInfo(),
+                future: _load(),
                 builder: (BuildContext context, AsyncSnapshot snapshot) {
                   switch (snapshot.connectionState) {
                     case ConnectionState.waiting:
@@ -317,7 +308,7 @@ class _DetailScreenState extends State<DetailScreen>
                           child: SpinKitChasingDots(
                               color: Colors.orange, size: 30.0));
                     case ConnectionState.done:
-                      return _imageInfo(snapshot);
+                      return _imageInfo(snapshot.data[0], snapshot.data[1]);
                     default:
                       return null;
                   }

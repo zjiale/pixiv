@@ -19,7 +19,6 @@ dynamic convertValueByType(value, Type type, {String stack: ""}) {
     return value;
   }
   var valueS = value.toString();
-
   if (type == String) {
     return valueS;
   } else if (type == int) {
@@ -45,18 +44,20 @@ void tryCatch(Function f) {
   }
 }
 
-class DetailModel {
+class MemberIllustModel {
   String status;
   List<Contents> response;
   int count;
+  Pagination pagination;
 
-  DetailModel({
+  MemberIllustModel({
     this.status,
     this.response,
     this.count,
+    this.pagination,
   });
 
-  factory DetailModel.fromJson(jsonRes) {
+  factory MemberIllustModel.fromJson(jsonRes) {
     if (jsonRes == null) return null;
     List<Contents> response = jsonRes['response'] is List ? [] : null;
     if (response != null) {
@@ -69,18 +70,20 @@ class DetailModel {
       }
     }
 
-    return DetailModel(
+    return MemberIllustModel(
       status: convertValueByType(jsonRes['status'], String,
-          stack: "DetailModel-status"),
+          stack: "MemberIllustModel-status"),
       response: response,
-      count:
-          convertValueByType(jsonRes['count'], int, stack: "DetailModel-count"),
+      count: convertValueByType(jsonRes['count'], int,
+          stack: "MemberIllustModel-count"),
+      pagination: Pagination.fromJson(jsonRes['pagination']),
     );
   }
   Map<String, dynamic> toJson() => {
         'status': status,
         'response': response,
         'count': count,
+        'pagination': pagination,
       };
 
   @override
@@ -92,7 +95,7 @@ class DetailModel {
 class Contents {
   int id;
   String title;
-  String caption;
+  Object caption;
   List<String> tags;
   List<String> tools;
   Image_urls image_urls;
@@ -110,8 +113,9 @@ class Contents {
   int page_count;
   String book_style;
   String type;
-  Metadata metadata;
+  Object metadata;
   Object content_type;
+  String sanity_level;
 
   Contents({
     this.id,
@@ -136,6 +140,7 @@ class Contents {
     this.type,
     this.metadata,
     this.content_type,
+    this.sanity_level,
   });
 
   factory Contents.fromJson(jsonRes) {
@@ -166,7 +171,7 @@ class Contents {
       id: convertValueByType(jsonRes['id'], int, stack: "Contents-id"),
       title:
           convertValueByType(jsonRes['title'], String, stack: "Contents-title"),
-      caption: convertValueByType(jsonRes['caption'], String,
+      caption: convertValueByType(jsonRes['caption'], Object,
           stack: "Contents-caption"),
       tags: tags,
       tools: tools,
@@ -195,9 +200,12 @@ class Contents {
       book_style: convertValueByType(jsonRes['book_style'], String,
           stack: "Contents-book_style"),
       type: convertValueByType(jsonRes['type'], String, stack: "Contents-type"),
-      metadata: Metadata.fromJson(jsonRes['metadata']),
+      metadata: convertValueByType(jsonRes['metadata'], Object,
+          stack: "Contents-metadata"),
       content_type: convertValueByType(jsonRes['content_type'], Object,
           stack: "Contents-content_type"),
+      sanity_level: convertValueByType(jsonRes['sanity_level'], String,
+          stack: "Contents-sanity_level"),
     );
   }
   Map<String, dynamic> toJson() => {
@@ -223,6 +231,7 @@ class Contents {
         'type': type,
         'metadata': metadata,
         'content_type': content_type,
+        'sanity_level': sanity_level,
       };
 
   @override
@@ -234,15 +243,11 @@ class Contents {
 class Image_urls {
   String px_128x128;
   String px_480mw;
-  String small;
-  String medium;
   String large;
 
   Image_urls({
     this.px_128x128,
     this.px_480mw,
-    this.small,
-    this.medium,
     this.large,
   });
 
@@ -253,18 +258,12 @@ class Image_urls {
               stack: "Image_urls-px_128x128"),
           px_480mw: convertValueByType(jsonRes['px_480mw'], String,
               stack: "Image_urls-px_480mw"),
-          small: convertValueByType(jsonRes['small'], String,
-              stack: "Image_urls-small"),
-          medium: convertValueByType(jsonRes['medium'], String,
-              stack: "Image_urls-medium"),
           large: convertValueByType(jsonRes['large'], String,
               stack: "Image_urls-large"),
         );
   Map<String, dynamic> toJson() => {
         'px_128x128': px_128x128,
         'px_480mw': px_480mw,
-        'small': small,
-        'medium': medium,
         'large': large,
       };
 
@@ -433,92 +432,46 @@ class Profile_image_urls {
   }
 }
 
-class Metadata {
-  List<Pages> pages;
+class Pagination {
+  Object previous;
+  int next;
+  int current;
+  int per_page;
+  int total;
+  int pages;
 
-  Metadata({
+  Pagination({
+    this.previous,
+    this.next,
+    this.current,
+    this.per_page,
+    this.total,
     this.pages,
   });
 
-  factory Metadata.fromJson(jsonRes) {
-    if (jsonRes == null) return null;
-    List<Pages> pages = jsonRes['pages'] is List ? [] : null;
-    if (pages != null) {
-      for (var item in jsonRes['pages']) {
-        if (item != null) {
-          tryCatch(() {
-            pages.add(Pages.fromJson(item));
-          });
-        }
-      }
-    }
-
-    return Metadata(
-      pages: pages,
-    );
-  }
+  factory Pagination.fromJson(jsonRes) => jsonRes == null
+      ? null
+      : Pagination(
+          previous: convertValueByType(jsonRes['previous'], Object,
+              stack: "Pagination-previous"),
+          next: convertValueByType(jsonRes['next'], int,
+              stack: "Pagination-next"),
+          current: convertValueByType(jsonRes['current'], int,
+              stack: "Pagination-current"),
+          per_page: convertValueByType(jsonRes['per_page'], int,
+              stack: "Pagination-per_page"),
+          total: convertValueByType(jsonRes['total'], int,
+              stack: "Pagination-total"),
+          pages: convertValueByType(jsonRes['pages'], int,
+              stack: "Pagination-pages"),
+        );
   Map<String, dynamic> toJson() => {
+        'previous': previous,
+        'next': next,
+        'current': current,
+        'per_page': per_page,
+        'total': total,
         'pages': pages,
-      };
-
-  @override
-  String toString() {
-    return json.encode(this);
-  }
-}
-
-class Pages {
-  Meta_Image_urls image_urls;
-
-  Pages({
-    this.image_urls,
-  });
-
-  factory Pages.fromJson(jsonRes) => jsonRes == null
-      ? null
-      : Pages(
-          image_urls: Meta_Image_urls.fromJson(jsonRes['image_urls']),
-        );
-  Map<String, dynamic> toJson() => {
-        'image_urls': image_urls,
-      };
-
-  @override
-  String toString() {
-    return json.encode(this);
-  }
-}
-
-class Meta_Image_urls {
-  String large;
-  String px_128x128;
-  String px_480mw;
-  String medium;
-
-  Meta_Image_urls({
-    this.large,
-    this.px_128x128,
-    this.px_480mw,
-    this.medium,
-  });
-
-  factory Meta_Image_urls.fromJson(jsonRes) => jsonRes == null
-      ? null
-      : Meta_Image_urls(
-          large: convertValueByType(jsonRes['large'], String,
-              stack: "Meta_Image_urls-large"),
-          px_128x128: convertValueByType(jsonRes['px_128x128'], String,
-              stack: "Meta_Image_urls-px_128x128"),
-          px_480mw: convertValueByType(jsonRes['px_480mw'], String,
-              stack: "Meta_Image_urls-px_480mw"),
-          medium: convertValueByType(jsonRes['medium'], String,
-              stack: "Meta_Image_urls-medium"),
-        );
-  Map<String, dynamic> toJson() => {
-        'large': large,
-        'px_128x128': px_128x128,
-        'px_480mw': px_480mw,
-        'medium': medium,
       };
 
   @override
