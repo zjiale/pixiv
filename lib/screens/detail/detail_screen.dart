@@ -150,15 +150,23 @@ class _DetailScreenState extends State<DetailScreen>
   Widget _userImageList(List imgList) {
     List<Widget> list = [];
 
-    for (var imgs in imgList) {
-      list.add(Container(
-          child: ExtendedImage.network(imgs.image_urls.px_480mw,
-              headers: headers,
-              fit: BoxFit.contain,
-              alignment: Alignment.topCenter)));
+    for (var i = 0; i < imgList.length; i++) {
+      list.add(Expanded(
+        child: Container(
+            width: ScreenUtil().setWidth(250.0),
+            height: ScreenUtil().setHeight(200.0),
+            margin: i == 1
+                ? EdgeInsets.symmetric(horizontal: 3.0)
+                : EdgeInsets.zero,
+            child: ExtendedImage.network(imgList[i].image_urls.px_480mw,
+                headers: headers,
+                fit: BoxFit.cover,
+                alignment: Alignment.topCenter)),
+      ));
     }
 
-    return Expanded(
+    return ClipRRect(
+      borderRadius: BorderRadius.all(Radius.circular(5.0)),
       child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween, children: list),
     );
@@ -186,7 +194,8 @@ class _DetailScreenState extends State<DetailScreen>
               Divider(height: 1.0, color: Colors.grey),
               SizedBox(height: 18.0),
               Container(
-                  height: 300.0,
+                  height: ScreenUtil().setHeight(400.0),
+                  width: double.infinity,
                   padding: EdgeInsets.symmetric(horizontal: 20.0),
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -214,7 +223,24 @@ class _DetailScreenState extends State<DetailScreen>
                               ]),
                               FollowButton()
                             ]),
-                        _userImageList(snapshot1)
+                        SizedBox(height: 18.0),
+                        _userImageList(snapshot1),
+                        SizedBox(height: 18.0),
+                        Center(
+                            child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Text('查看个人简介',
+                                style: TextStyle(
+                                    color: Color(0xFF5F9EA0),
+                                    fontSize: ScreenUtil().setSp(24.0),
+                                    fontWeight: FontWeight.w600)),
+                            SizedBox(width: 5.0),
+                            Icon(Icons.arrow_forward_ios,
+                                color: Colors.lightBlue,
+                                size: ScreenUtil().setSp(20.0))
+                          ],
+                        ))
                       ]))
             ],
           ),
@@ -237,53 +263,60 @@ class _DetailScreenState extends State<DetailScreen>
           bottom: 0,
           left: 0,
           child: GestureDetector(
-            onTap: () {
-              showModalBottomSheet(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return Container(
-                      color: Colors.greenAccent,
-                    );
-                  });
-            },
+            onTap: () {},
             child: Opacity(
               opacity: (_showBottom != null ? _showBottom : (_difference <= 20))
                   ? 1.0
                   : 0.0,
               child: Container(
                 height: 60.0,
-                width: ScreenUtil().setWidth(750.0),
-                padding: EdgeInsets.symmetric(horizontal: 10.0),
-                color: Colors.yellow,
-                child: Row(children: <Widget>[
-                  SlideTransition(
-                    position: _slideAnimation,
-                    child: Icon(
-                      Icons.arrow_drop_up,
-                      size: 25.0,
-                    ),
-                  ),
-                  SlideTransition(
-                    position: _slideAnimation1,
-                    child: Row(
-                      children: <Widget>[
-                        CircleAvatar(
-                            radius: 20.0,
-                            backgroundImage: NetworkImage(
-                                'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1600553076,1284989575&fm=26&gp=0.jpg')),
-                        SizedBox(width: 10.0),
-                        Container(
-                          width: ScreenUtil().setWidth(550.0),
-                          child: Text(
-                            '啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊啊刷煞阿萨大大实打实的',
-                            maxLines: _maxLine,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        )
-                      ],
-                    ),
-                  )
-                ]),
+                padding: EdgeInsets.all(10.0),
+                color: Colors.white,
+                child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      SlideTransition(
+                        position: _slideAnimation,
+                        child: Icon(
+                          Icons.arrow_drop_up,
+                          size: 25.0,
+                        ),
+                      ),
+                      SizedBox(width: 5.0),
+                      SlideTransition(
+                          position: _slideAnimation1,
+                          child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                CircleAvatar(
+                                    radius: 16.0,
+                                    backgroundImage: NetworkImage(
+                                        _query.user.profile_image_urls.px_50x50,
+                                        headers: headers)),
+                                SizedBox(width: 10.0),
+                                Container(
+                                    width: ScreenUtil().setWidth(550.0),
+                                    child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: <Widget>[
+                                          Text(_query.title,
+                                              maxLines: _maxLine,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.black54)),
+                                          SizedBox(
+                                              height:
+                                                  ScreenUtil().setHeight(8.0)),
+                                          Text(_query.user.name,
+                                              style: TextStyle(
+                                                  fontSize:
+                                                      ScreenUtil().setSp(20.0),
+                                                  color: Colors.black45))
+                                        ]))
+                              ]))
+                    ]),
               ),
             ),
           ),
