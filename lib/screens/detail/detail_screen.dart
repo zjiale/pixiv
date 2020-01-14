@@ -361,7 +361,7 @@ class _DetailScreenState extends State<DetailScreen>
     int num = _query.metadata != null ? _query.metadata.pages.length : 1;
     // 图片的总共长度
     double _totalHeight = _limitHeight * num;
-    double _difference = _totalHeight - _deviceSize.height;
+    // double _difference = _totalHeight - _deviceSize.height;
 
     return Stack(
       children: <Widget>[
@@ -412,10 +412,7 @@ class _DetailScreenState extends State<DetailScreen>
               }
             },
             child: Offstage(
-                offstage:
-                    (_showBottom != null ? _showBottom : (_difference <= 20))
-                        ? false
-                        : true,
+                offstage: _totalHeight > _deviceSize.height ? false : true,
                 child: BackdropFilter(
                     filter:
                         new ImageFilter.blur(sigmaX: _sigmaX, sigmaY: _sigmaY),
@@ -429,11 +426,19 @@ class _DetailScreenState extends State<DetailScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
-              IconButton(
-                icon: Icon(Icons.arrow_back),
-                iconSize: 30.0,
-                color: Colors.white,
-                onPressed: () => Navigator.pop(context),
+              GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Text('\u{E5C4}',
+                    style: TextStyle(
+                        fontSize: ScreenUtil().setSp(60.0),
+                        color: Colors.white,
+                        fontFamily: 'MaterialIcons',
+                        shadows: [
+                          BoxShadow(
+                              color: Colors.black,
+                              offset: Offset(0.1, 0.1),
+                              blurRadius: 5.0)
+                        ])),
               )
             ],
           ),

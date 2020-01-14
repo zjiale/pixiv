@@ -13,7 +13,7 @@ class Config {
     {"text": "新人", "type": "rookie"},
     {"text": "周榜", "type": "weekly"},
     {"text": "月榜", "type": "monthly"},
-    {"text": "过去排行榜", "type": "other"},
+    {"text": "过去", "type": "other"},
   ];
 
   Map<String, String> getHeader() {
