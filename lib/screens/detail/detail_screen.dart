@@ -9,7 +9,6 @@ import 'package:pixiv/api/CommonServices.dart';
 import 'package:pixiv/common/config.dart';
 import 'package:pixiv/model/detail_model.dart';
 import 'package:pixiv/model/member_illust_model.dart';
-import 'package:pixiv/screens/detail/illust_desc.dart';
 import 'package:pixiv/widgets/follow_btn.dart';
 
 class DetailScreen extends StatefulWidget {
@@ -23,7 +22,7 @@ class DetailScreen extends StatefulWidget {
 }
 
 class _DetailScreenState extends State<DetailScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   final String _type = 'member_illust';
 
   // 滚动监听相关属性
@@ -31,17 +30,24 @@ class _DetailScreenState extends State<DetailScreen>
   AsyncMemoizer _memoizer = AsyncMemoizer();
   ScrollController _scrollController = new ScrollController();
   ScrollController _descController = new ScrollController();
+  // 判断是否首次进入详情页显示bottom
   bool _showBottom;
+  // 只用于记录滚动监听是否多次
+  bool _show = true;
+
   // window对象中视窗单位为px，所以这里需要除以像素数得到dp
   double viewport = window.physicalSize.height / window.devicePixelRatio;
   double padding = window.padding.top / window.devicePixelRatio;
 
   // 动画相关属性
   AnimationController _controller;
+  AnimationController _headerController;
   Animation<Offset> _slideAnimation;
+  Animation<Offset> _headerSlideAnimation;
   final Duration duration = const Duration(milliseconds: 300);
 
   // 图片简介相关属性
+  final int _maxLine = 2;
   double _sigmaX, _sigmaY = 0;
   Map<String, String> headers = Config.headers;
 
@@ -55,18 +61,22 @@ class _DetailScreenState extends State<DetailScreen>
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: duration);
+    _headerController =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 100));
     _slideAnimation =
         Tween<Offset>(begin: Offset(0.0, 0.88), end: Offset(0.0, 0.0))
             .animate(_controller);
-    WidgetsBinding.instance.addPostFrameCallback((callback) {
-      _slideListener();
-    });
+    _headerSlideAnimation =
+        Tween<Offset>(begin: Offset(0.0, 0.0), end: Offset(-0.1, 0.0))
+            .animate(_headerController);
+    _slideListener();
   }
 
   @override
   void dispose() {
     //为了避免内存泄露，需要调用_scrollController.dispose
     _scrollController.dispose();
+    _descController.dispose();
     super.dispose();
   }
 
@@ -78,13 +88,17 @@ class _DetailScreenState extends State<DetailScreen>
           viewport +
           padding +
           60.0;
-      if (_scrollController.offset >= _scrollNum) {
+      if (_scrollController.offset >= _scrollNum && _show) {
         setState(() {
+          _headerController.forward();
           _showBottom = false;
+          _show = false;
         });
-      } else {
+      } else if (_scrollController.offset < _scrollNum && !_show) {
         setState(() {
+          _headerController.reverse();
           _showBottom = true;
+          _show = true;
         });
       }
     });
@@ -225,12 +239,117 @@ class _DetailScreenState extends State<DetailScreen>
     return Container(
         height: ScreenUtil().setHeight(800.0),
         width: ScreenUtil().setWidth(750.0),
-        padding: EdgeInsets.all(10.0),
+        // padding: EdgeInsets.only(left: 20.0, top: 5.0, bottom: 20.0),
         color: Colors.white,
         child: ListView(controller: _descController, children: <Widget>[
-          IllustDesc(_query),
+          _illustHeader(_query),
           _illustor(_query, snapshot1)
         ]));
+  }
+
+  Widget _illustHeader(var _query) {
+    final List _tags = _query.tags;
+
+    return Padding(
+      padding: EdgeInsets.only(left: 20.0, top: 5.0, bottom: 20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+            Container(
+                margin: EdgeInsets.only(right: 10.0),
+                child: Icon(
+                  _isCollasped
+                      ? Icons.keyboard_arrow_down
+                      : Icons.keyboard_arrow_up,
+                  size: ScreenUtil().setSp(60.0),
+                  color: Colors.black54,
+                )),
+            SlideTransition(
+              position: _headerSlideAnimation,
+              child: Row(children: <Widget>[
+                CircleAvatar(
+                    radius: 16.0,
+                    backgroundImage: NetworkImage(
+                        _query.user.profile_image_urls.px_50x50,
+                        headers: headers)),
+                SizedBox(width: 10.0),
+                Container(
+                    width: ScreenUtil().setWidth(550.0),
+                    child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(_query.title,
+                              maxLines: _maxLine,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black54)),
+                          SizedBox(height: ScreenUtil().setHeight(8.0)),
+                          Text(_query.user.name,
+                              style: TextStyle(
+                                  fontSize: ScreenUtil().setSp(20.0),
+                                  color: Colors.black45))
+                        ]))
+              ]),
+            )
+          ]),
+          SizedBox(height: 18.0),
+          Row(children: <Widget>[
+            Text('${_query.created_time}',
+                style: TextStyle(
+                    color: Color(0xFF5F9EA0),
+                    fontSize: ScreenUtil().setSp(24.0))),
+            SizedBox(width: 10.0),
+            RichText(
+              text: TextSpan(
+                  style: TextStyle(
+                      color: Color(0xFF5F9EA0),
+                      fontSize: ScreenUtil().setSp(24.0)),
+                  children: [
+                    TextSpan(
+                        text: "${_query.stats.views_count}",
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(text: " 阅读"),
+                  ]),
+              textDirection: TextDirection.ltr,
+            ),
+            SizedBox(width: 10.0),
+            RichText(
+              text: TextSpan(
+                  style: TextStyle(
+                      color: Color(0xFF5F9EA0),
+                      fontSize: ScreenUtil().setSp(24.0)),
+                  children: [
+                    TextSpan(
+                        text:
+                            "${_query.stats.favorited_count.public + _query.stats.favorited_count.private}",
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                    TextSpan(text: " 喜欢"),
+                  ]),
+              textDirection: TextDirection.ltr,
+            )
+          ]),
+          SizedBox(height: 10.0),
+          Wrap(
+            spacing: 5.0,
+            // runSpacing: 3.0,
+            children: _tags
+                .map((e) => Chip(
+                      backgroundColor: Colors.orangeAccent,
+                      label: Text('#$e', style: TextStyle(color: Colors.white)),
+                    ))
+                .toList(),
+          ),
+          SizedBox(height: 10.0),
+          Container(
+              padding: EdgeInsets.only(right: 10.0),
+              width: double.infinity,
+              child: Text(_query.caption,
+                  style: TextStyle(color: Colors.black54))),
+        ],
+      ),
+    );
   }
 
   Widget _imageInfo(List snapshot, List snapshot1) {
@@ -266,7 +385,7 @@ class _DetailScreenState extends State<DetailScreen>
                 controller: _scrollController,
                 children: <Widget>[
                   _imageList(context, snapshot),
-                  IllustDesc(_query),
+                  _illustHeader(_query),
                   Divider(height: 1.0, color: Colors.grey),
                   SizedBox(height: 18.0),
                   _illustor(_query, snapshot1)
@@ -313,7 +432,7 @@ class _DetailScreenState extends State<DetailScreen>
               IconButton(
                 icon: Icon(Icons.arrow_back),
                 iconSize: 30.0,
-                color: Colors.black,
+                color: Colors.white,
                 onPressed: () => Navigator.pop(context),
               )
             ],

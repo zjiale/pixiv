@@ -27,7 +27,7 @@ class _HomeRankState extends State<HomeRank> {
         itemCount: widget._rankList.length,
         itemBuilder: (BuildContext context, int index) {
           return Container(
-            width: 225.0,
+            width: ScreenUtil().setWidth(450.0),
             margin: EdgeInsets.only(right: 10.0),
             child: Stack(
               children: <Widget>[
