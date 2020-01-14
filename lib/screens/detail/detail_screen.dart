@@ -9,7 +9,7 @@ import 'package:pixiv/api/CommonServices.dart';
 import 'package:pixiv/common/config.dart';
 import 'package:pixiv/model/detail_model.dart';
 import 'package:pixiv/model/member_illust_model.dart';
-import 'package:pixiv/screens/detail/illuser_desc.dart';
+import 'package:pixiv/screens/detail/illust_desc.dart';
 import 'package:pixiv/widgets/follow_btn.dart';
 
 class DetailScreen extends StatefulWidget {
@@ -30,6 +30,7 @@ class _DetailScreenState extends State<DetailScreen>
   final GlobalKey _imageGlobalKey = GlobalKey();
   AsyncMemoizer _memoizer = AsyncMemoizer();
   ScrollController _scrollController = new ScrollController();
+  ScrollController _descController = new ScrollController();
   bool _showBottom;
   // window对象中视窗单位为px，所以这里需要除以像素数得到dp
   double viewport = window.physicalSize.height / window.devicePixelRatio;
@@ -38,22 +39,24 @@ class _DetailScreenState extends State<DetailScreen>
   // 动画相关属性
   AnimationController _controller;
   Animation<Offset> _slideAnimation;
-  Animation<Offset> _slideAnimation1;
   final Duration duration = const Duration(milliseconds: 300);
 
   // 图片简介相关属性
-  int _maxLine = 2;
+  double _sigmaX, _sigmaY = 0;
   Map<String, String> headers = Config.headers;
+
+  // 是否监听模糊层
+  bool _absorb = false;
+
+  // bottom控件相关属性
+  bool _isCollasped = false;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: duration);
     _slideAnimation =
-        Tween<Offset>(begin: Offset(0.0, 0.0), end: Offset(-1.0, 0.0))
-            .animate(_controller);
-    _slideAnimation1 =
-        Tween<Offset>(begin: Offset(0.0, 0.0), end: Offset(-0.3, 0.0))
+        Tween<Offset>(begin: Offset(0.0, 0.88), end: Offset(0.0, 0.0))
             .animate(_controller);
     WidgetsBinding.instance.addPostFrameCallback((callback) {
       _slideListener();
@@ -77,15 +80,11 @@ class _DetailScreenState extends State<DetailScreen>
           60.0;
       if (_scrollController.offset >= _scrollNum) {
         setState(() {
-          _controller.forward();
           _showBottom = false;
-          _maxLine = 1;
         });
       } else {
         setState(() {
-          _controller.reverse();
           _showBottom = true;
-          _maxLine = 2;
         });
       }
     });
@@ -172,6 +171,68 @@ class _DetailScreenState extends State<DetailScreen>
     );
   }
 
+  Widget _illustor(var _query, var snapshot1) {
+    return Container(
+        height: ScreenUtil().setHeight(400.0),
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 20.0),
+        child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Row(children: <Widget>[
+                      CircleAvatar(
+                          radius: 16.0,
+                          backgroundImage: NetworkImage(
+                              _query.user.profile_image_urls.px_50x50,
+                              headers: headers)),
+                      SizedBox(width: 10.0),
+                      Container(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                            Text(_query.user.name,
+                                style: TextStyle(
+                                    color: Colors.black54,
+                                    fontWeight: FontWeight.bold))
+                          ]))
+                    ]),
+                    FollowButton()
+                  ]),
+              SizedBox(height: 18.0),
+              _userImageList(snapshot1),
+              SizedBox(height: 18.0),
+              Center(
+                  child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text('查看个人简介',
+                      style: TextStyle(
+                          color: Color(0xFF5F9EA0),
+                          fontSize: ScreenUtil().setSp(24.0),
+                          fontWeight: FontWeight.w600)),
+                  SizedBox(width: 5.0),
+                  Icon(Icons.arrow_forward_ios,
+                      color: Colors.lightBlue, size: ScreenUtil().setSp(20.0))
+                ],
+              ))
+            ]));
+  }
+
+  Widget _illustorDesc(var _query, var snapshot1) {
+    return Container(
+        height: ScreenUtil().setHeight(800.0),
+        width: ScreenUtil().setWidth(750.0),
+        padding: EdgeInsets.all(10.0),
+        color: Colors.white,
+        child: ListView(controller: _descController, children: <Widget>[
+          IllustDesc(_query),
+          _illustor(_query, snapshot1)
+        ]));
+  }
+
   Widget _imageInfo(List snapshot, List snapshot1) {
     var _query = snapshot.first;
 
@@ -185,64 +246,63 @@ class _DetailScreenState extends State<DetailScreen>
 
     return Stack(
       children: <Widget>[
-        Container(
-          child: ListView(
-            controller: _scrollController,
-            children: <Widget>[
-              _imageList(context, snapshot),
-              IlluserDesc(_query),
-              Divider(height: 1.0, color: Colors.grey),
-              SizedBox(height: 18.0),
-              Container(
-                  height: ScreenUtil().setHeight(400.0),
-                  width: double.infinity,
-                  padding: EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Row(children: <Widget>[
-                                CircleAvatar(
-                                    radius: 16.0,
-                                    backgroundImage: NetworkImage(
-                                        _query.user.profile_image_urls.px_50x50,
-                                        headers: headers)),
-                                SizedBox(width: 10.0),
-                                Container(
-                                    child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                      Text(_query.user.name,
-                                          style: TextStyle(
-                                              color: Colors.black54,
-                                              fontWeight: FontWeight.bold))
-                                    ]))
-                              ]),
-                              FollowButton()
-                            ]),
-                        SizedBox(height: 18.0),
-                        _userImageList(snapshot1),
-                        SizedBox(height: 18.0),
-                        Center(
-                            child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Text('查看个人简介',
-                                style: TextStyle(
-                                    color: Color(0xFF5F9EA0),
-                                    fontSize: ScreenUtil().setSp(24.0),
-                                    fontWeight: FontWeight.w600)),
-                            SizedBox(width: 5.0),
-                            Icon(Icons.arrow_forward_ios,
-                                color: Colors.lightBlue,
-                                size: ScreenUtil().setSp(20.0))
-                          ],
-                        ))
-                      ]))
-            ],
+        // 监听是否有点击模糊层
+        Listener(
+          onPointerUp: (event) {
+            if (_absorb == false) return;
+            setState(() {
+              _isCollasped = !_isCollasped;
+              _sigmaX = 0;
+              _sigmaY = 0;
+              _absorb = false;
+              _descController.jumpTo(0.0);
+            });
+            _controller.reverse();
+          },
+          child: AbsorbPointer(
+            absorbing: _absorb,
+            child: Container(
+              child: ListView(
+                controller: _scrollController,
+                children: <Widget>[
+                  _imageList(context, snapshot),
+                  IllustDesc(_query),
+                  Divider(height: 1.0, color: Colors.grey),
+                  SizedBox(height: 18.0),
+                  _illustor(_query, snapshot1)
+                ],
+              ),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          child: GestureDetector(
+            onTap: () {
+              if (_isCollasped) {
+                return;
+              } else {
+                setState(() {
+                  _isCollasped = !_isCollasped;
+                  _sigmaX = 3;
+                  _sigmaY = 3;
+                  _absorb = true;
+                });
+                _controller.forward();
+              }
+            },
+            child: Offstage(
+                offstage:
+                    (_showBottom != null ? _showBottom : (_difference <= 20))
+                        ? false
+                        : true,
+                child: BackdropFilter(
+                    filter:
+                        new ImageFilter.blur(sigmaX: _sigmaX, sigmaY: _sigmaY),
+                    child: SlideTransition(
+                        position: _slideAnimation,
+                        child: _illustorDesc(_query, snapshot1)))),
           ),
         ),
         Padding(
@@ -259,68 +319,6 @@ class _DetailScreenState extends State<DetailScreen>
             ],
           ),
         ),
-        Positioned(
-          bottom: 0,
-          left: 0,
-          child: GestureDetector(
-            onTap: () {},
-            child: Opacity(
-              opacity: (_showBottom != null ? _showBottom : (_difference <= 20))
-                  ? 1.0
-                  : 0.0,
-              child: Container(
-                height: 60.0,
-                padding: EdgeInsets.all(10.0),
-                color: Colors.white,
-                child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      SlideTransition(
-                        position: _slideAnimation,
-                        child: Icon(
-                          Icons.arrow_drop_up,
-                          size: 25.0,
-                        ),
-                      ),
-                      SizedBox(width: 5.0),
-                      SlideTransition(
-                          position: _slideAnimation1,
-                          child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: <Widget>[
-                                CircleAvatar(
-                                    radius: 16.0,
-                                    backgroundImage: NetworkImage(
-                                        _query.user.profile_image_urls.px_50x50,
-                                        headers: headers)),
-                                SizedBox(width: 10.0),
-                                Container(
-                                    width: ScreenUtil().setWidth(550.0),
-                                    child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: <Widget>[
-                                          Text(_query.title,
-                                              maxLines: _maxLine,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.black54)),
-                                          SizedBox(
-                                              height:
-                                                  ScreenUtil().setHeight(8.0)),
-                                          Text(_query.user.name,
-                                              style: TextStyle(
-                                                  fontSize:
-                                                      ScreenUtil().setSp(20.0),
-                                                  color: Colors.black45))
-                                        ]))
-                              ]))
-                    ]),
-              ),
-            ),
-          ),
-        )
       ],
     );
   }

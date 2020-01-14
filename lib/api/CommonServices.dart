@@ -26,7 +26,6 @@ class CommonServices {
   }
 
   Future<Response> getDetailInfo(String type, int id) async {
-    print(type + '$id');
     return await Dio()
         .get("${Api.BASE_URL}?type=$type&id=$id", options: _getOptions());
   }

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:pixiv/common/config.dart';
 
-class IlluserDesc extends StatelessWidget {
+class IllustDesc extends StatelessWidget {
   final dynamic _query;
-  IlluserDesc(this._query);
+  IllustDesc(this._query);
 
   // 图片简介相关属性
   final int _maxLine = 2;
