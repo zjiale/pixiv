@@ -84,10 +84,9 @@ class _DetailScreenState extends State<DetailScreen>
   void _slideListener() {
     //监听滚动事件，打印滚动位置
     _scrollController.addListener(() {
-      double _scrollNum = _imageGlobalKey.currentContext.size.height -
-          viewport +
-          padding +
-          60.0;
+      double _scrollNum =
+          _imageGlobalKey.currentContext.size.height - viewport + padding;
+      if (_scrollNum < 0) return;
       if (_scrollController.offset >= _scrollNum && _show) {
         setState(() {
           _headerController.forward();
@@ -235,19 +234,19 @@ class _DetailScreenState extends State<DetailScreen>
             ]));
   }
 
-  Widget _illustorDesc(var _query, var snapshot1) {
+  Widget _illustorDesc(var _query, var snapshot1, bool _isShow) {
     return Container(
         height: ScreenUtil().setHeight(800.0),
         width: ScreenUtil().setWidth(750.0),
         // padding: EdgeInsets.only(left: 20.0, top: 5.0, bottom: 20.0),
         color: Colors.white,
         child: ListView(controller: _descController, children: <Widget>[
-          _illustHeader(_query),
+          _illustHeader(_query, _isShow),
           _illustor(_query, snapshot1)
         ]));
   }
 
-  Widget _illustHeader(var _query) {
+  Widget _illustHeader(var _query, bool _isShow) {
     final List _tags = _query.tags;
 
     return Padding(
@@ -256,15 +255,18 @@ class _DetailScreenState extends State<DetailScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           Row(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
-            Container(
-                margin: EdgeInsets.only(right: 10.0),
-                child: Icon(
-                  _isCollasped
-                      ? Icons.keyboard_arrow_down
-                      : Icons.keyboard_arrow_up,
-                  size: ScreenUtil().setSp(60.0),
-                  color: Colors.black54,
-                )),
+            Offstage(
+              offstage: !_isShow,
+              child: Container(
+                  margin: EdgeInsets.only(right: 10.0),
+                  child: Icon(
+                    _isCollasped
+                        ? Icons.keyboard_arrow_down
+                        : Icons.keyboard_arrow_up,
+                    size: ScreenUtil().setSp(60.0),
+                    color: Colors.black54,
+                  )),
+            ),
             SlideTransition(
               position: _headerSlideAnimation,
               child: Row(children: <Widget>[
@@ -361,7 +363,8 @@ class _DetailScreenState extends State<DetailScreen>
     int num = _query.metadata != null ? _query.metadata.pages.length : 1;
     // 图片的总共长度
     double _totalHeight = _limitHeight * num;
-    // double _difference = _totalHeight - _deviceSize.height;
+    double _difference =
+        _totalHeight - _deviceSize.height + MediaQuery.of(context).padding.top;
 
     return Stack(
       children: <Widget>[
@@ -385,7 +388,7 @@ class _DetailScreenState extends State<DetailScreen>
                 controller: _scrollController,
                 children: <Widget>[
                   _imageList(context, snapshot),
-                  _illustHeader(_query),
+                  _illustHeader(_query, _difference > 0 ? true : false),
                   Divider(height: 1.0, color: Colors.grey),
                   SizedBox(height: 18.0),
                   _illustor(_query, snapshot1)
@@ -394,6 +397,7 @@ class _DetailScreenState extends State<DetailScreen>
             ),
           ),
         ),
+        // 底部弹窗视图
         Positioned(
           bottom: 0,
           left: 0,
@@ -412,13 +416,17 @@ class _DetailScreenState extends State<DetailScreen>
               }
             },
             child: Offstage(
-                offstage: _totalHeight > _deviceSize.height ? false : true,
+                // _difference为图片总长度减去视窗长度，因为要做到重叠效果增加多20偏移距离，true是不显示
+                offstage: (_showBottom != null ? _showBottom : _difference > 0)
+                    ? false
+                    : true,
                 child: BackdropFilter(
                     filter:
                         new ImageFilter.blur(sigmaX: _sigmaX, sigmaY: _sigmaY),
                     child: SlideTransition(
                         position: _slideAnimation,
-                        child: _illustorDesc(_query, snapshot1)))),
+                        child: _illustorDesc(_query, snapshot1,
+                            _difference > 0 ? true : false)))),
           ),
         ),
         Padding(
