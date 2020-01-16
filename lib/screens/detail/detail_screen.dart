@@ -9,6 +9,7 @@ import 'package:pixiv/api/CommonServices.dart';
 import 'package:pixiv/common/config.dart';
 import 'package:pixiv/model/detail_model.dart';
 import 'package:pixiv/model/member_illust_model.dart';
+import 'package:pixiv/widgets/appbar_btn.dart';
 import 'package:pixiv/widgets/follow_btn.dart';
 
 class DetailScreen extends StatefulWidget {
@@ -69,7 +70,9 @@ class _DetailScreenState extends State<DetailScreen>
     _headerSlideAnimation =
         Tween<Offset>(begin: Offset(0.0, 0.0), end: Offset(-0.1, 0.0))
             .animate(_headerController);
-    _slideListener();
+    WidgetsBinding.instance.addPostFrameCallback((callback) {
+      _slideListener();
+    });
   }
 
   @override
@@ -87,13 +90,13 @@ class _DetailScreenState extends State<DetailScreen>
       double _scrollNum =
           _imageGlobalKey.currentContext.size.height - viewport + padding;
       if (_scrollNum < 0) return;
-      if (_scrollController.offset >= _scrollNum && _show) {
+      if (_scrollController.offset > _scrollNum && _show) {
         setState(() {
           _headerController.forward();
           _showBottom = false;
           _show = false;
         });
-      } else if (_scrollController.offset < _scrollNum && !_show) {
+      } else if (_scrollController.offset <= _scrollNum && !_show) {
         setState(() {
           _headerController.reverse();
           _showBottom = true;
@@ -429,28 +432,7 @@ class _DetailScreenState extends State<DetailScreen>
                             _difference > 0 ? true : false)))),
           ),
         ),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 20.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Text('\u{E5C4}',
-                    style: TextStyle(
-                        fontSize: ScreenUtil().setSp(60.0),
-                        color: Colors.white,
-                        fontFamily: 'MaterialIcons',
-                        shadows: [
-                          BoxShadow(
-                              color: Colors.black,
-                              offset: Offset(0.1, 0.1),
-                              blurRadius: 5.0)
-                        ])),
-              )
-            ],
-          ),
-        ),
+        AppBarButton()
       ],
     );
   }

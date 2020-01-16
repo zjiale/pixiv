@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:pixiv/screens/detail/detail_screen.dart';
 import 'package:pixiv/screens/home/home_screen.dart';
+import 'package:pixiv/screens/illustor/illustor_screen.dart';
 import 'package:pixiv/screens/rank/top_image.dart';
 import 'package:pixiv/screens/rank/rank_screen.dart';
 
@@ -20,7 +21,7 @@ class MyApp extends StatelessWidget {
         '/homeScreen': (BuildContext context) => HomeScreen(),
         '/rankScreen': (BuildContext context) => RankScreen(),
       },
-      home: HomeScreen(),
+      home: IllustorScreen(),
     );
   }
 }

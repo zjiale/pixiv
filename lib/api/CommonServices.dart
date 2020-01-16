@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
 import 'package:pixiv/api/api.dart';
 import 'package:pixiv/common/config.dart';
