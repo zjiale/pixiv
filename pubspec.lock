@@ -29,6 +29,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.0.5"
+  brotli:
+    dependency: transitive
+    description:
+      name: brotli
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.2.2"
   charcode:
     dependency: transitive
     description:
@@ -51,12 +58,12 @@ packages:
     source: hosted
     version: "2.1.1"
   crypto:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
       name: crypto
       url: "https://pub.flutter-io.cn"
     source: hosted
-    version: "2.1.3"
+    version: "2.1.4"
   cupertino_icons:
     dependency: "direct main"
     description:
@@ -71,6 +78,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "3.0.7"
+  equatable:
+    dependency: transitive
+    description:
+      name: equatable
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.2"
   extended_image:
     dependency: "direct main"
     description:
@@ -99,6 +113,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.1.3"
+  fixnum:
+    dependency: transitive
+    description:
+      name: fixnum
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.10.11"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -137,6 +158,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "8.5.0"
+  hex:
+    dependency: transitive
+    description:
+      name: hex
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.1.2"
   http:
     dependency: transitive
     description:
@@ -144,6 +172,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "0.12.0+3"
+  http2:
+    dependency: transitive
+    description:
+      name: http2
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.0"
   http_client_helper:
     dependency: transitive
     description:
@@ -165,6 +200,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.1.4"
+  ip:
+    dependency: transitive
+    description:
+      name: ip
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.1.1"
   like_button:
     dependency: "direct main"
     description:
@@ -200,6 +242,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.1.8"
+  mime:
+    dependency: transitive
+    description:
+      name: mime
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.9.6+3"
   path:
     dependency: transitive
     description:
@@ -242,6 +291,20 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.0.5"
+  raw:
+    dependency: transitive
+    description:
+      name: raw
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.2.0"
+  restio:
+    dependency: "direct main"
+    description:
+      name: restio
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.4.2"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -296,6 +359,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.1.6"
+  utf:
+    dependency: transitive
+    description:
+      name: utf
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.9.0+5"
   vector_math:
     dependency: transitive
     description:
@@ -318,5 +388,5 @@ packages:
     source: hosted
     version: "3.5.0"
 sdks:
-  dart: ">=2.5.0 <3.0.0"
+  dart: ">=2.6.0 <3.0.0"
   flutter: ">=1.10.0 <2.0.0"

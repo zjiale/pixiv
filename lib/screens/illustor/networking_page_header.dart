@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:pixiv/widgets/appbar_btn.dart';
 
 class NetworkingPageHeader implements SliverPersistentHeaderDelegate {
   NetworkingPageHeader({
@@ -14,6 +15,8 @@ class NetworkingPageHeader implements SliverPersistentHeaderDelegate {
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
+    final Duration duration = const Duration(milliseconds: 300);
+
     return Stack(
       fit: StackFit.expand,
       alignment: Alignment.center,
@@ -35,6 +38,26 @@ class NetworkingPageHeader implements SliverPersistentHeaderDelegate {
           ),
         ),
         Positioned(
+          left: 16.0,
+          top: 16.0,
+          child: AppBarButton(
+              title: AnimatedOpacity(
+            duration: duration,
+            opacity: titleOpacity(shrinkOffset) <= 0 ? 1.0 : 0.0,
+            child: Row(children: <Widget>[
+              CircleAvatar(
+                  radius: 20.0,
+                  backgroundImage: NetworkImage(
+                      'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1600553076,1284989575&fm=26&gp=0.jpg')),
+              SizedBox(width: 5.0),
+              Text(
+                '测试测试测试测试测试',
+                style: TextStyle(color: Colors.white),
+              )
+            ]),
+          )),
+        ),
+        Positioned(
           bottom: -40.0,
           child: Transform.scale(
             scale: titleOpacity(shrinkOffset),
@@ -54,8 +77,9 @@ class NetworkingPageHeader implements SliverPersistentHeaderDelegate {
 
   double titleOpacity(double shrinkOffset) {
     // simple formula: fade out text as soon as shrinkOffset > 0
-    print(1.0 - max(0.0, shrinkOffset) / (maxExtent - minExtent));
-    return 1.0 - max(0.0, shrinkOffset) / (maxExtent - minExtent);
+    double _opacity = 1.0 - max(0.0, shrinkOffset) / (maxExtent - minExtent);
+    if (_opacity < 0) return 0.0;
+    return _opacity;
     // more complex formula: starts fading out text when shrinkOffset > minExtent
     //return 1.0 - max(0.0, (shrinkOffset - minExtent)) / (maxExtent - minExtent);
   }

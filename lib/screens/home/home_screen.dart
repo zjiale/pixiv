@@ -8,7 +8,8 @@ import 'package:pixiv/model/image_list_model.dart';
 import 'package:pixiv/screens/home/home_case.dart';
 import 'package:pixiv/screens/home/home_latest.dart';
 import 'package:pixiv/widgets/list_item.dart';
-import './title_header.dart';
+import 'package:pixiv/widgets/title_header.dart';
+
 import './user_desc.dart';
 import './home_rank.dart';
 
@@ -182,7 +183,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: EdgeInsets.symmetric(horizontal: 10.0),
             child: Column(
               children: <Widget>[
-                TitleHeader('assets/images/crown.png', '排行榜'),
+                TitleHeader(imgUrl: 'assets/images/crown.png', title: '排行榜'),
                 HomeRank(_rankList)
               ],
             ),
@@ -190,12 +191,14 @@ class _HomeScreenState extends State<HomeScreen> {
           SizedBox(height: 30.0),
           Padding(
               padding: EdgeInsets.symmetric(horizontal: 10.0),
-              child: TitleHeader('assets/images/case.png', '插画特辑')),
+              child:
+                  TitleHeader(imgUrl: 'assets/images/case.png', title: '插画特辑')),
           HomeCase(_case),
           SizedBox(height: 30.0),
           Padding(
               padding: EdgeInsets.symmetric(horizontal: 10.0),
-              child: TitleHeader('assets/images/new.png', '最新作品')),
+              child:
+                  TitleHeader(imgUrl: 'assets/images/new.png', title: '最新作品')),
           HomeLatest(_latest)
         ]),
       ),
